@@ -1,0 +1,6 @@
+{
+  "name": "Velora Home",
+  "description": "Luxury interior design ideas, architectural lighting collections, and bespoke home consultation studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

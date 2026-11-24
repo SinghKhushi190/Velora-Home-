@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isOwnerAdmin() {
+      return isSignedIn() &&
+             'email_verified' in request.auth.token &&
+             'email' in request.auth.token &&
+             request.auth.token.email_verified == true &&
+             request.auth.token.email == 'kk8147561@gmail.com';
+    }
+
+    function isValidSavedIdea(data, userId, ideaId) {
+      return data.userId is string && data.userId == userId &&
+             data.ideaId is string && data.ideaId == ideaId &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+             data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidConsultation(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userEmail is string && data.userEmail.size() <= 150 &&
+             data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 80 &&
+             data.phoneNumber is string && data.phoneNumber.size() >= 10 && data.phoneNumber.size() <= 20 &&
+             data.city is string && data.city.size() >= 2 && data.city.size() <= 80 &&
+             data.propertyType is string && data.propertyType.size() >= 2 && data.propertyType.size() <= 40 &&
+             data.serviceScope is string && data.serviceScope.size() >= 2 && data.serviceScope.size() <= 60 &&
+             data.designReference is string && data.designReference.size() <= 160 &&
+             data.notes is string && data.notes.size() <= 500 &&
+             data.studioOwnerPhone is string && data.studioOwnerPhone == '8084189925' &&
+             data.status in ['pending', 'contacted', 'scheduled', 'completed'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // 1. User-scoped saved design & lighting shortlist
+    match /users/{userId}/saved_ideas/{ideaId} {
+      allow get: if isOwner(userId) && isValidId(ideaId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidId(ideaId) &&
+                       incoming().keys().hasAll(['userId', 'ideaId', 'title', 'category', 'createdAt']) &&
+                       incoming().keys().hasOnly(['userId', 'ideaId', 'title', 'category', 'createdAt']) &&
+                       isValidSavedIdea(incoming(), userId, ideaId);
+      allow update: if false;
+      allow delete: if isOwner(userId) && isValidId(ideaId);
+    }
+
+    // 2. Multi-user consultation & quote requests owned/reviewed by Velora Home (8084189925)
+    match /consultations/{consultationId} {
+      allow get: if isSignedIn() &&
+                    isValidId(consultationId) &&
+                    (existing().userId == request.auth.uid || isOwnerAdmin());
+      allow list: if isSignedIn() &&
+                     (existing().userId == request.auth.uid || isOwnerAdmin());
+      allow create: if isSignedIn() &&
+                       isValidId(consultationId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().status == 'pending' &&
+                       incoming().keys().hasAll([
+                         'userId', 'userEmail', 'fullName', 'phoneNumber', 'city',
+                         'propertyType', 'serviceScope', 'designReference', 'notes',
+                         'studioOwnerPhone', 'status', 'createdAt', 'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId', 'userEmail', 'fullName', 'phoneNumber', 'city',
+                         'propertyType', 'serviceScope', 'designReference', 'notes',
+                         'studioOwnerPhone', 'status', 'createdAt', 'updatedAt'
+                       ]) &&
+                       isValidConsultation(incoming());
+      allow update: if isSignedIn() &&
+                       isValidId(consultationId) &&
+                       isValidConsultation(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().userEmail == existing().userEmail &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().studioOwnerPhone == existing().studioOwnerPhone &&
+                       (
+                         (isOwnerAdmin() &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+                         (existing().userId == request.auth.uid &&
+                          existing().status == 'pending' &&
+                          incoming().status == 'pending' &&
+                          incoming().diff(existing()).affectedKeys().hasOnly(['notes', 'phoneNumber', 'updatedAt']))
+                       );
+      allow delete: if isSignedIn() &&
+                       isValidId(consultationId) &&
+                       (existing().userId == request.auth.uid || isOwnerAdmin());
+    }
+  }
+}

@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Velora Home</string>
+    <string name="studio_tagline">Where light meets intention.</string>
+    <string name="studio_city">Lucknow, Uttar Pradesh</string>
+    <string name="studio_phone_raw">8084189925</string>
+    <string name="studio_phone_display">+91 8084189925</string>
+    <string name="cta_get_quote">Get a Quote</string>
+    <string name="cta_book_consultation">Book a Free Consultation</string>
+    <string name="cta_call_studio">Call +91 8084189925</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_ideas">Ideas</string>
+    <string name="nav_lighting">Lighting</string>
+    <string name="nav_studio">Studio</string>
+</resources>

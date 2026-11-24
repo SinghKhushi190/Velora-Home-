@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "SavedIdea": {
+      "title": "SavedIdea",
+      "description": "A design or lighting concept bookmarked by a signed-in Velora Home user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID."
+        },
+        "ideaId": {
+          "type": "string",
+          "description": "Catalog identifier of the bookmarked design or lighting concept."
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title of the bookmarked concept."
+        },
+        "category": {
+          "type": "string",
+          "description": "Room category or lighting series label."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "ideaId", "title", "category", "createdAt"]
+    },
+    "Consultation": {
+      "title": "Consultation",
+      "description": "A customer consultation or quote inquiry submitted to Velora Home (owner line 8084189925).",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated UID of the customer who submitted the inquiry."
+        },
+        "userEmail": {
+          "type": "string",
+          "description": "Email address of the customer."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Customer full name."
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Customer callback mobile number."
+        },
+        "city": {
+          "type": "string",
+          "description": "Customer city or locality."
+        },
+        "propertyType": {
+          "type": "string",
+          "description": "Property configuration (e.g., 2 BHK, 3 BHK, 4 BHK / Villa, Commercial)."
+        },
+        "serviceScope": {
+          "type": "string",
+          "description": "Requested design scope."
+        },
+        "designReference": {
+          "type": "string",
+          "description": "Selected design idea or budget estimate reference."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional project notes from the user."
+        },
+        "studioOwnerPhone": {
+          "type": "string",
+          "description": "Velora Home official owner contact number (8084189925)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "contacted", "scheduled", "completed"],
+          "description": "Lead workflow status managed by the Velora Home owner."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "userEmail",
+        "fullName",
+        "phoneNumber",
+        "city",
+        "propertyType",
+        "serviceScope",
+        "designReference",
+        "notes",
+        "studioOwnerPhone",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/saved_ideas/{ideaId}": {
+      "schema": { "$ref": "#/entities/SavedIdea" },
+      "description": "User-scoped bookmarked design and lighting inspirations."
+    },
+    "/consultations/{consultationId}": {
+      "schema": { "$ref": "#/entities/Consultation" },
+      "description": "Shared multi-user consultation inquiries routed to Velora Home owner (8084189925)."
+    }
+  }
+}
